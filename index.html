@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimalVet-AI: Veterinary & Animal Health Intelligence</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans for body, Space Grotesk for headings -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        heading: ['"Space Grotesk"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f3ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        },
+                        accent: {
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e',
+                            cyan: '#06b6d4',
+                        }
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.12)',
+                        'glow': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- TensorFlow.js and Teachable Machine Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Custom scrollbars and subtle animation utility classes */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pulse-border {
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 12px rgba(99, 102, 241, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation (Principle: Hierarchy & Movement) -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-500 flex items-center justify-center text-white shadow-glow">
+                        <i class="fa-solid fa-user-nurse text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-heading font-bold text-lg sm:text-xl tracking-tight text-white block leading-none">AnimalVet-AI</span>
+                        <span class="text-xs text-brand-500 font-medium tracking-wide">VETERINARY INTELLIGENCE HUB</span>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex space-x-8 text-sm font-medium">
+                    <a href="#interactive-demo" class="text-slate-300 hover:text-white transition-colors duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-flask text-brand-500"></i> Interactive Demo
+                    </a>
+                    <a href="#community-impact" class="text-slate-300 hover:text-white transition-colors duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-heart text-rose-400"></i> Community Impact
+                    </a>
+                    <a href="#design-principles" class="text-slate-300 hover:text-white transition-colors duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-amber-400"></i> Design Philosophy
+                    </a>
+                </nav>
+
+                <div class="flex items-center space-x-3">
+                    <a href="https://teachablemachine.withgoogle.com/models/Y7T0Ka9AR/" target="_blank" rel="noopener noreferrer" 
+                       class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition-all duration-200 shadow-sm hover:shadow">
+                        <span>Original Model</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- Hero Section (Principle: Contrast & Visual Balance) -->
+        <section class="relative overflow-hidden py-16 sm:py-24 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+            <!-- Background Glow Decor -->
+            <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 sm:w-[600px] h-96 sm:h-[600px] bg-brand-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-500 text-xs sm:text-sm font-semibold mb-6">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Vet Vision Model Active
+                </div>
+
+                <h1 class="font-heading text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
+                    Smart Animal Care with <span class="gradient-text">AnimalVet-AI</span>
+                </h1>
+
+                <p class="mt-6 text-base sm:text-lg lg:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                    AI-driven visual assessment powered by Google Teachable Machine model <code class="bg-slate-800 px-2 py-0.5 rounded text-brand-400 font-mono text-sm">Y7T0Ka9AR</code> for real-time animal wellness & species analysis.
+                </p>
+
+                <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
+                    <a href="#interactive-demo" class="px-7 py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm rounded-xl shadow-glow transition-all duration-200 flex items-center gap-2">
+                        <i class="fa-solid fa-stethoscope"></i> Launch Vet Scanner
+                    </a>
+                    <a href="#community-impact" class="px-7 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-semibold text-sm rounded-xl border border-slate-800 transition-all duration-200">
+                        Explore Vet Significance
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Playground Section (Principle: Balance & Unity) -->
+        <section id="interactive-demo" class="py-12 sm:py-20 bg-slate-900/50 border-y border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
+                    <div>
+                        <h2 class="font-heading text-2xl sm:text-4xl font-bold text-white flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-500 flex items-center justify-center text-sm"><i class="fa-solid fa-paw"></i></span>
+                            Teachable Machine Image Model
+                        </h2>
+                        <p class="mt-2 text-slate-400 text-sm sm:text-base">
+                            Run real-time vision assessment using the exact Teachable Machine API integration.
+                        </p>
+                    </div>
+
+                    <!-- View Switcher Tabs -->
+                    <div class="flex p-1 bg-slate-950 rounded-xl border border-slate-800 self-stretch sm:self-auto">
+                        <button id="tab-live" onclick="switchTab('live')" class="flex-1 sm:flex-initial px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-brand-600 text-white shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-camera"></i> Live Vet Scanner
+                        </button>
+                        <button id="tab-iframe" onclick="switchTab('iframe')" class="flex-1 sm:flex-initial px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-window-maximize"></i> Official Model Frame
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW 1: Teachable Machine WebCam Classification Engine -->
+                <div id="view-live" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    <!-- WebCam Feed Panel (Left Side) -->
+                    <div class="lg:col-span-7 glass-panel rounded-2xl p-6 border border-slate-800 shadow-xl relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-2">
+                                <span id="status-indicator" class="w-3 h-3 rounded-full bg-slate-600"></span>
+                                <h3 class="font-heading font-semibold text-slate-200">Animal Assessment Feed</h3>
+                            </div>
+                            <span id="fps-badge" class="text-xs font-mono bg-slate-800 text-slate-400 px-2.5 py-1 rounded-md border border-slate-700">
+                                Status: Ready
+                            </span>
+                        </div>
+
+                        <!-- Video Container -->
+                        <div class="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center group">
+                            <!-- Target container for webcam canvas element -->
+                            <div id="webcam-container" class="w-full h-full flex items-center justify-center [&>canvas]:w-full [&>canvas]:h-full [&>canvas]:object-cover"></div>
+
+                            <!-- Initial Start Button Overlay -->
+                            <div id="webcam-placeholder" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-950/90 backdrop-blur-sm z-10 transition-opacity duration-300">
+                                <div class="w-16 h-16 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center mb-4 pulse-border">
+                                    <i class="fa-solid fa-paw text-2xl"></i>
+                                </div>
+                                <h4 class="font-heading font-bold text-lg text-white mb-1">Teachable Machine Scanner</h4>
+                                <p class="text-xs sm:text-sm text-slate-400 max-w-sm mb-6">
+                                    Click below to initialize the camera feed and load model weights from URL <code class="bg-slate-900 px-1 py-0.5 rounded text-brand-400 font-mono text-xs">Y7T0Ka9AR</code>.
+                                </p>
+                                <button type="button" onclick="init()" class="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl shadow-glow transition-all duration-200 flex items-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-power-off"></i> Start
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Info Bar -->
+                        <div class="mt-5 flex items-center justify-between gap-4">
+                            <div class="text-xs text-slate-400 flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-brand-400"></i>
+                                <span>Runs client-side in browser memory via TensorFlow.js</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Predictions Display (Right Side) -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="glass-panel rounded-2xl p-6 border border-slate-800 shadow-xl">
+                            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+                                <div>
+                                    <h3 class="font-heading font-semibold text-white text-lg">Class Probabilities</h3>
+                                    <p class="text-xs text-slate-400">Updated in real-time via <code class="text-brand-400 font-mono">predict()</code> loop</p>
+                                </div>
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-sm">
+                                    <i class="fa-solid fa-chart-bar"></i>
+                                </div>
+                            </div>
+
+                            <!-- Target container for prediction outputs -->
+                            <div id="label-container" class="space-y-4">
+                                <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 text-center">
+                                    <i class="fa-solid fa-circle-notch animate-spin text-brand-400 text-xl mb-2"></i>
+                                    <p class="text-xs text-slate-400">Click "Start" to begin scanning...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Technical Info Box -->
+                        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-400 space-y-2">
+                            <div class="font-semibold text-slate-300 flex items-center gap-2 text-xs">
+                                <i class="fa-solid fa-code text-brand-400"></i> Teachable Machine Integration
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-900">
+                                <span>Model Endpoint</span>
+                                <span class="font-mono text-slate-300">Y7T0Ka9AR</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-900">
+                                <span>Libraries Loaded</span>
+                                <span class="text-slate-300">@tensorflow/tfjs & @teachablemachine/image</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span>Input Canvas Resolution</span>
+                                <span class="text-slate-300">200 x 200 (Flipped)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: Standard Iframe Fallback Container -->
+                <div id="view-iframe" class="hidden">
+                    <div class="glass-panel rounded-2xl p-6 border border-slate-800 shadow-xl">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+                            <div>
+                                <h3 class="font-heading font-semibold text-white">Hosted Model Viewer</h3>
+                                <p class="text-xs text-slate-400">Direct embedded preview from Teachable Machine cloud servers</p>
+                            </div>
+                            <a href="https://teachablemachine.withgoogle.com/models/Y7T0Ka9AR/" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1 font-medium">
+                                Open in new tab <i class="fa-solid fa-external-link text-xs"></i>
+                            </a>
+                        </div>
+                        <div class="w-full aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-800">
+                            <iframe 
+                                src="https://teachablemachine.withgoogle.com/models/Y7T0Ka9AR/" 
+                                class="w-full h-full border-0" 
+                                title="Teachable Machine Embedded Model"
+                                allow="camera; microphone"
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 2: Significance to the Community (Core Requirement) -->
+        <section id="community-impact" class="py-16 sm:py-24 bg-slate-950 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="font-heading text-3xl sm:text-5xl font-bold text-white tracking-tight">
+                        Significance to <span class="gradient-text">Animal Health & Shelters</span>
+                    </h2>
+                    <p class="mt-4 text-slate-400 text-base sm:text-lg">
+                        AnimalVet-AI brings accessible vision recognition tools to animal rescues, veterinary clinics, and pet owners for rapid triage and education.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    
+                    <!-- Card 1: Accessibility & Inclusion -->
+                    <div class="glass-panel p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all duration-300 group hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-xl mb-5 group-hover:bg-brand-600 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-kit-medical"></i>
+                        </div>
+                        <h3 class="font-heading font-semibold text-lg text-white mb-2">Accessible Vet Screening</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Allows animal shelters, rescues, and pet owners to instantly screen and classify animal characteristics without expensive specialized diagnostic hardware.
+                        </p>
+                    </div>
+
+                    <!-- Card 2: Local Problem Solving -->
+                    <div class="glass-panel p-6 rounded-2xl border border-slate-800 hover:border-emerald-500/50 transition-all duration-300 group hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-5 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-shield-cat"></i>
+                        </div>
+                        <h3 class="font-heading font-semibold text-lg text-white mb-2">Shelter & Rescue Triage</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Empowers community animal shelters with automated visual categorizations to speed up intake processing, tracking, and health triage.
+                        </p>
+                    </div>
+
+                    <!-- Card 3: Educational Empowerment -->
+                    <div class="glass-panel p-6 rounded-2xl border border-slate-800 hover:border-purple-500/50 transition-all duration-300 group hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-xl mb-5 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <h3 class="font-heading font-semibold text-lg text-white mb-2">Vet Tech Education</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Serves as a practical learning tool for veterinary technology students and caretakers exploring modern artificial intelligence applications in animal care.
+                        </p>
+                    </div>
+
+                    <!-- Card 4: Open & Private Edge Computing -->
+                    <div class="glass-panel p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all duration-300 group hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-5 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h3 class="font-heading font-semibold text-lg text-white mb-2">Client Data Privacy</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Runs vision inference fully client-side using browser GPU memory—ensuring camera streams of client animals are kept completely private.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Design Principles Application Breakdown (Core Requirement) -->
+        <section id="design-principles" class="py-16 sm:py-24 bg-slate-900/60 border-t border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <span class="text-xs font-semibold uppercase tracking-widest text-brand-400">UI/UX Architecture</span>
+                    <h2 class="font-heading text-3xl sm:text-5xl font-bold text-white tracking-tight mt-2">
+                        Applied Principles of Design
+                    </h2>
+                    <p class="mt-4 text-slate-400 text-sm sm:text-base">
+                        This webpage deliberately applies standard UX design principles to create an intuitive human-AI interface.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Principle 1: Contrast -->
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-3 rounded-full bg-brand-500"></div>
+                            <h3 class="font-heading font-semibold text-white">1. Contrast</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            High dark-mode background contrast combined with vibrant indigo and emerald accents guides immediate visual focus to active webcam outputs and confidence metrics.
+                        </p>
+                    </div>
+
+                    <!-- Principle 2: Visual Hierarchy -->
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-3 rounded-full bg-purple-500"></div>
+                            <h3 class="font-heading font-semibold text-white">2. Visual Hierarchy</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Clear typographic scale using Space Grotesk for primary headers down to Plus Jakarta Sans for body metadata ensures effortless content scannability.
+                        </p>
+                    </div>
+
+                    <!-- Principle 3: Balance & Grid Alignment -->
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                            <h3 class="font-heading font-semibold text-white">3. Balance</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Asymmetrical grid distribution balances live video input on the left with probability analytics on the right for comfortable visual balance.
+                        </p>
+                    </div>
+
+                    <!-- Principle 4: Movement & Flow -->
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <h3 class="font-heading font-semibold text-white">4. Movement & Flow</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Animated status indicators, progress bars, and smooth transitions lead user movement naturally from activation to real-time analysis.
+                        </p>
+                    </div>
+
+                    <!-- Principle 5: Repetition & Pattern -->
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                            <h3 class="font-heading font-semibold text-white">5. Pattern & Repetition</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Consistent card structures, glassmorphism containers, and button radiuses produce a cohesive ecosystem across all sections.
+                        </p>
+                    </div>
+
+                    <!-- Principle 6: Unity & Proportion -->
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-3 h-3 rounded-full bg-cyan-500"></div>
+                            <h3 class="font-heading font-semibold text-white">6. Unity & Harmony</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Harmonized color scheme, padding standards, and rounded corners align interactive elements with modern software aesthetic standards.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800/80 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-xs text-slate-500">
+                AnimalVet-AI • Veterinary Artificial Intelligence Assistance • Powered by TensorFlow.js & Teachable Machine
+            </div>
+            <div class="flex items-center space-x-6 text-xs text-slate-400">
+                <a href="https://teachablemachine.withgoogle.com/" target="_blank" class="hover:text-white transition-colors">Teachable Machine Docs</a>
+                <a href="https://www.tensorflow.org/js" target="_blank" class="hover:text-white transition-colors">TF.js Docs</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script implementing the exact Teachable Machine initialization API -->
+    <script type="text/javascript">
+        // Link to model provided by Teachable Machine export panel
+        const URL = "https://teachablemachine.withgoogle.com/models/Y7T0Ka9AR/";
+
+        let model, webcam, labelContainer, maxPredictions;
+
+        // View Switcher Tab Control
+        function switchTab(viewName) {
+            const liveView = document.getElementById('view-live');
+            const iframeView = document.getElementById('view-iframe');
+            const tabLive = document.getElementById('tab-live');
+            const tabIframe = document.getElementById('tab-iframe');
+
+            if (viewName === 'live') {
+                liveView.classList.remove('hidden');
+                iframeView.classList.add('hidden');
+                tabLive.className = "flex-1 sm:flex-initial px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-brand-600 text-white shadow-sm transition-all duration-200 flex items-center justify-center gap-2";
+                tabIframe.className = "flex-1 sm:flex-initial px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center gap-2";
+            } else {
+                liveView.classList.add('hidden');
+                iframeView.classList.remove('hidden');
+                tabIframe.className = "flex-1 sm:flex-initial px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-brand-600 text-white shadow-sm transition-all duration-200 flex items-center justify-center gap-2";
+                tabLive.className = "flex-1 sm:flex-initial px-5 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all duration-200 flex items-center justify-center gap-2";
+            }
+        }
+
+        // Load the image model and setup the webcam
+        async function init() {
+            const placeholder = document.getElementById('webcam-placeholder');
+            placeholder.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-spinner animate-spin text-brand-400 text-3xl mb-3"></i>
+                    <p class="text-sm font-semibold text-white">Loading Neural Model...</p>
+                    <p class="text-xs text-slate-400 mt-1">Fetching weights from Teachable Machine URL</p>
+                </div>
+            `;
+
+            try {
+                const modelURL = URL + "model.json";
+                const metadataURL = URL + "metadata.json";
+
+                // load the model and metadata
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+
+                // Convenience function to setup a webcam
+                const flip = true; // whether to flip the webcam
+                webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+                await webcam.setup(); // request access to the webcam
+                await webcam.play();
+                window.requestAnimationFrame(loop);
+
+                // append elements to the DOM
+                const webcamContainer = document.getElementById("webcam-container");
+                webcamContainer.innerHTML = "";
+                webcamContainer.appendChild(webcam.canvas);
+
+                labelContainer = document.getElementById("label-container");
+                labelContainer.innerHTML = "";
+                for (let i = 0; i < maxPredictions; i++) { // and class labels
+                    const card = document.createElement("div");
+                    card.className = "p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-1";
+                    card.innerHTML = `
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-slate-300 label-title">Class ${i+1}</span>
+                            <span class="text-brand-400 label-prob font-mono">0.00</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                            <div class="label-bar h-full bg-gradient-to-r from-brand-600 to-purple-500 w-0 transition-all duration-150 rounded-full"></div>
+                        </div>
+                    `;
+                    labelContainer.appendChild(card);
+                }
+
+                // UI adjustments upon successful load
+                placeholder.classList.add('opacity-0', 'pointer-events-none');
+                document.getElementById('status-indicator').className = "w-3 h-3 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('fps-badge').innerText = "Status: Active";
+                document.getElementById('fps-badge').className = "text-xs font-mono bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-md border border-emerald-500/30";
+
+            } catch (err) {
+                console.error("Initialization error:", err);
+                placeholder.innerHTML = `
+                    <div class="flex flex-col items-center text-rose-400 p-4">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-2"></i>
+                        <p class="text-sm font-semibold text-white">Camera Access Failed</p>
+                        <p class="text-xs text-slate-400 mt-1 max-w-xs">Ensure your browser has permissions for camera access.</p>
+                        <button onclick="init()" class="mt-4 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-xs font-semibold text-white rounded-lg">
+                            Retry Camera
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function loop() {
+            webcam.update(); // update the webcam frame
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const probability = prediction[i].probability;
+                const formattedProb = probability.toFixed(2);
+                const classPrediction = prediction[i].className + ": " + formattedProb;
+                
+                // Keep innerHTML updated while styling with progress bar
+                const card = labelContainer.childNodes[i];
+                if (card) {
+                    const titleEl = card.querySelector('.label-title');
+                    const probEl = card.querySelector('.label-prob');
+                    const barEl = card.querySelector('.label-bar');
+
+                    if (titleEl && probEl && barEl) {
+                        titleEl.innerText = prediction[i].className;
+                        probEl.innerText = formattedProb;
+                        barEl.style.width = `${(probability * 100).toFixed(1)}%`;
+                    } else {
+                        // Direct fallback if custom child elements aren't present
+                        card.innerHTML = classPrediction;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
